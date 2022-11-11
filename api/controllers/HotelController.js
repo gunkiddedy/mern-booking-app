@@ -7,7 +7,9 @@ export const createHotel = async (req, res, next) => {
   const newHotel = new Hotel(req.body)
   try {
     const savedHotel = await newHotel.save()
-    res.status(200).json(savedHotel)
+    res
+    .status(200)
+    .json(savedHotel)
   } catch (error) {
     next(error)
   }
@@ -15,17 +17,32 @@ export const createHotel = async (req, res, next) => {
 
 // UPDATE HOTEL BY ID
 export const updateHotel = async (req, res, next) => {
-  const id = req.params.id
+  // const id = req.params.id // this works as well
+  const { id } = req.params // this works as well
   try {
     if(!mongoose.Types.ObjectId.isValid(id)) {
       next(createError(404, 'No id found!'))
     }
-    const updatedHotel = await Hotel.findByIdAndUpdate(
-      id,
-      { $set: req.body},
-      { new: true} // send back the data in updated version
-    )
-    res.status(200).json(updatedHotel)
+
+    // this works as well
+    // const updatedHotel = await Hotel.findByIdAndUpdate(
+    //   id,
+    //   { $set: req.body},
+    //   { new: true} // send back the data in updated version
+    // )
+
+    // this works as well
+    const updatedHotel = await Hotel.findOneAndUpdate({ _id: id }, {...req.body}, { new: true})
+
+    if(!updatedHotel) {
+      res
+      .status(404)
+      .json({err: 'no data found'})
+    }
+
+    res
+    .status(200)
+    .json(updatedHotel)
   } catch (error) {
     next(error)
   }
@@ -39,8 +56,17 @@ export const deleteHotel = async (req, res, next) => {
       // return res.status(404).json({msg: 'No id found!'})
       next(createError(404, 'No id found!'))
     }
-    await Hotel.findByIdAndDelete(id)
-    res.status(200).json('hotel has been deleted.')
+    
+    // const deletedHotel = await Hotel.findByIdAndDelete(id)
+    // res.status(200).json(deletedHotel)
+
+    const deletedHotel = await Hotel.findByIdAndDelete(id)
+
+    if(!deletedHotel) {
+      res.status(404).json('No data to found')  
+    }
+
+    res.status(200).json(deletedHotel)
   } catch (error) {
     next(error)
   }
@@ -55,8 +81,12 @@ export const getHotel = async (req, res, next) => {
       // return res.status(404).json({msg: 'No id found!'})
       next(createError(404, 'No id found!'))
     }
+
     const hotel = await Hotel.findById(id)
-    res.status(200).json(hotel)
+
+    res
+    .status(200)
+    .json(hotel)
   } catch (error) {
     next(error)
   }
@@ -66,11 +96,16 @@ export const getHotel = async (req, res, next) => {
 export const getHotels = async (req, res, next) => {
   const { min, max, ...others } = req.query 
   try {
-    const hotels = await Hotel.find({
+    const hotels = await Hotel
+    .find({
       ...others, 
       cheapestPrice: { $gt: min | 1, $lte: max || 999 }
-    }).limit(req.query.limit).sort({createdAt: -1}) // (-1 = desc, 1 = asc)
-    res.status(200).json(hotels)
+    })
+    .limit(req.query.limit)
+    .sort({createdAt: -1}) // (-1 = desc, 1 = asc)
+    res
+    .status(200)
+    .json(hotels)
   } catch (error) {
     next(error)
   }
