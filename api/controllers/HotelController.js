@@ -1,5 +1,6 @@
 import Hotel from "../models/HotelModel.js"
 import { createError } from "../utils/error.js"
+import mongoose from "mongoose"
 
 // CREATE HOTEL
 export const createHotel = async (req, res, next) => {
@@ -14,8 +15,11 @@ export const createHotel = async (req, res, next) => {
 
 // UPDATE HOTEL BY ID
 export const updateHotel = async (req, res, next) => {
+  const id = req.params.id
   try {
-    const id = req.params.id
+    if(!mongoose.Types.ObjectId.isValid(id)) {
+      next(createError(404, 'No id found!'))
+    }
     const updatedHotel = await Hotel.findByIdAndUpdate(
       id,
       { $set: req.body},
@@ -29,10 +33,13 @@ export const updateHotel = async (req, res, next) => {
 
 // DELETE BY ID
 export const deleteHotel = async (req, res, next) => {
+  const id = req.params.id
   try {
-    const id = req.params.id
-    const hotelId = await Hotel.findById(id)
-    if(!hotelId) return next(createError(403, 'Id is not valid'))
+    if(!mongoose.Types.ObjectId.isValid(id)) {
+      // return res.status(404).json({msg: 'No id found!'})
+      next(createError(404, 'No id found!'))
+    }
+    await Hotel.findByIdAndDelete(id)
     res.status(200).json('hotel has been deleted.')
   } catch (error) {
     next(error)
@@ -41,8 +48,13 @@ export const deleteHotel = async (req, res, next) => {
 
 // GET SINGLE HOTEL
 export const getHotel = async (req, res, next) => {
+  const id = req.params.id
   try {
-    const id = req.params.id
+    // const { id } = req.params // this also works as well
+    if(!mongoose.Types.ObjectId.isValid(id)) {
+      // return res.status(404).json({msg: 'No id found!'})
+      next(createError(404, 'No id found!'))
+    }
     const hotel = await Hotel.findById(id)
     res.status(200).json(hotel)
   } catch (error) {
@@ -57,7 +69,7 @@ export const getHotels = async (req, res, next) => {
     const hotels = await Hotel.find({
       ...others, 
       cheapestPrice: { $gt: min | 1, $lte: max || 999 }
-    }).limit(req.query.limit)
+    }).limit(req.query.limit).sort({createdAt: -1}) // (-1 = desc, 1 = asc)
     res.status(200).json(hotels)
   } catch (error) {
     next(error)
