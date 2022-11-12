@@ -20,7 +20,7 @@ const useFetch = (url) => {
 
   useEffect(() => {
     fetchData()
-  }, [url])
+  }, [])
 
   const reFetch = async () => {
     setLoading(true)

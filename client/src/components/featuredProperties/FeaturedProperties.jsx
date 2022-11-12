@@ -8,7 +8,7 @@ const Photo = ({item, alt}) => {
 }
 
 const FeaturedProperties = () => {
-  const URL = 'http://localhost:8800/api/hotelss?featured=true&limit=3'
+  const URL = 'http://localhost:8800/api/hotels?featured=true&limit=4'
   const defaultImg = 'https://cf.bstatic.com/xdata/images/xphoto/square300/57584488.webp?k=bf724e4e9b9b75480bbe7fc675460a089ba6414fe4693b83ea3fdd8e938832a6&o='
 
   const { data, loading, error } = useFetch(URL)

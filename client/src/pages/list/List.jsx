@@ -1,25 +1,34 @@
-import "./list.css";
-import Navbar from "../../components/navbar/Navbar";
-import Header from "../../components/header/Header";
-import { useLocation } from "react-router-dom";
-import { useState } from "react";
-import { format } from "date-fns";
-import { DateRange } from "react-date-range";
-import SearchItem from "../../components/searchItem/SearchItem";
+import "./list.css"
+import Navbar from "../../components/navbar/Navbar"
+import Header from "../../components/header/Header"
+import { useLocation } from "react-router-dom"
+import { useState } from "react"
+import { format } from "date-fns"
+import { DateRange } from "react-date-range"
+import SearchItem from "../../components/searchItem/SearchItem"
+import useFetch from "../../hooks/useFetch"
 
 const List = () => {
-  const location = useLocation();
-  // const [destination, setDestination] = useState(location.state.destination);
-  const [date, setDate] = useState(location.state.date);
-  const [openDate, setOpenDate] = useState(false);
-  // const [options, setOptions] = useState(location.state.options);
+  const location = useLocation()
+  const [destination, setDestination] = useState(location.state.destination)
+  const [date, setDate] = useState(location.state.date)
+  const [openDate, setOpenDate] = useState(false)
+  const [options, setOptions] = useState(location.state.options)
+  const [min, setMin] = useState(1)
+  const [max, setMax] = useState(999)
 
-  const destination = 'jakarta'
-  const options = {
-    children: 'children',
-    room: 'room',
-    adult: 'adult'
-  }
+  const URL = 'http://localhost:8800/api/'
+
+  const { 
+    data, 
+    loading, 
+    error, 
+    reFetch 
+  } = useFetch(`${URL}hotels?city=${destination}&min=${min || 0}&max=${max || 999 }`)
+
+  const handleClick = () => reFetch()
+
+  console.log('data', data)
 
   return (
     <div>
@@ -31,7 +40,7 @@ const List = () => {
             <h1 className="lsTitle">Search</h1>
             <div className="lsItem">
               <label>Destination</label>
-              <input placeholder={destination} type="text" />
+              <input onChange={e => setDestination(e.target.value)} placeholder={destination} type="text" />
             </div>
             <div className="lsItem">
               <label>Check-in Date</label>
@@ -54,13 +63,13 @@ const List = () => {
                   <span className="lsOptionText">
                     Min price <small>per night</small>
                   </span>
-                  <input type="number" className="lsOptionInput" />
+                  <input onChange={e => setMin(e.target.value)} value={min} type="number" className="lsOptionInput" />
                 </div>
                 <div className="lsOptionItem">
                   <span className="lsOptionText">
                     Max price <small>per night</small>
                   </span>
-                  <input type="number" className="lsOptionInput" />
+                  <input onChange={e => setMax(e.target.value)} value={max} type="number" className="lsOptionInput" />
                 </div>
                 <div className="lsOptionItem">
                   <span className="lsOptionText">Adult</span>
@@ -91,23 +100,25 @@ const List = () => {
                 </div>
               </div>
             </div>
-            <button>Search</button>
+            <button onClick={handleClick}>Search</button>
           </div>
           <div className="listResult">
-            <SearchItem />
-            <SearchItem />
-            <SearchItem />
-            <SearchItem />
-            <SearchItem />
-            <SearchItem />
-            <SearchItem />
-            <SearchItem />
-            <SearchItem />
+            { loading ? 'Loading hotels...' : 
+            <>
+              { data && data.map(item => (
+                <SearchItem 
+                  item={item} 
+                  key={item._id} 
+                />
+              )) }
+              { !data.length && <span>No hotel found</span> }
+            </> }
+            { error && <span> { error.message } </span> }
           </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default List;
+export default List
